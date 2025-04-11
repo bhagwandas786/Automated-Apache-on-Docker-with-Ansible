@@ -1,0 +1,38 @@
+---
+- name: Automated Docker and Apache Deployment  
+  hosts: all  
+  become: true  
+
+  tasks:  
+    - name: Install Docker (Debian/Ubuntu)  
+      apt:  
+        name: docker.io  
+        state: present  
+        update_cache: yes  
+      when: ansible_os_family == 'Debian'  
+
+    - name: Install Docker (RedHat/CentOS)  
+      yum:  
+        name: docker  
+        state: present  
+      when: ansible_os_family == 'RedHat'  
+
+    - name: Start and enable Docker service  
+      service:  
+        name: docker  
+        state: started  
+        enabled: yes  
+
+    - name: Pull latest Apache image  
+      community.docker.docker_image:  
+        name: httpd  
+        tag: latest  
+
+    - name: Deploy Apache container  
+      community.docker.docker_container:  
+        name: my-apache  
+        image: httpd:latest  
+        ports:  
+          - "80:80"  
+        state: started  
+        restart_policy: unless-stopped  
